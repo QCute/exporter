@@ -1,0 +1,1 @@
+{application, exporter, [{description, "exporter - export module local function"}, {vsn, "1.0.0"}, {modules, [exporter]}, {registered, []}, {applications, [kernel, stdlib]}]}.
