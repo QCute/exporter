@@ -22,8 +22,10 @@ export(Module, Function, Arity) ->
     {ok, {_, [{atoms, Atoms}, {labeled_exports, Exports}, {labeled_locals, Locals}]}} = beam_lib:chunks(File, [atoms, labeled_exports, labeled_locals]),
     %% build and replace atom table into beam dict
     Dict = setelement(2, beam_dict:new(), lists:foldl(fun({I, A}, M) -> maps:put(A, I, M) end, maps:new(), Atoms)),
+    %% supply previous exports
+    LoadedExports = Module:module_info(exports),
     %% split export and local
-    {NewExport, NewLocal} = lists:partition(fun({F, A, _}) -> (F == Function andalso A == Arity) orelse (F == Function andalso Arity == 0) end, Locals),
+    {NewExport, NewLocal} = lists:partition(fun({F, A, _}) -> (F == Function andalso A == Arity) orelse (F == Function andalso Arity == 0) orelse lists:member({F, A}, LoadedExports) orelse (lists:keymember(F, 1, LoadedExports) andalso Arity == 0) end, Locals),
     %% export
     ExportDict = lists:foldl(fun({F, A, E}, D) -> beam_dict:export(F, A, E, D) end, Dict, NewExport ++ Exports),
     {NumberExports, ExportTable} = beam_dict:export_table(ExportDict),
